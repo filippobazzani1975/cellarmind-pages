@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'cellarmind-app-shell-'
-const CACHE_NAME = `${CACHE_PREFIX}v2`
+const CACHE_NAME = `${CACHE_PREFIX}v3`
 const APP_SHELL = ['./manifest.webmanifest', './favicon.svg']
 
 const isCacheableResponse = (response) =>
