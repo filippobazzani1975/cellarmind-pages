@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'cellarmind-app-shell-'
-const CACHE_NAME = `${CACHE_PREFIX}v1`
+const CACHE_NAME = `${CACHE_PREFIX}v2`
 const APP_SHELL = ['./manifest.webmanifest', './favicon.svg']
 
 const isCacheableResponse = (response) =>
@@ -7,7 +7,8 @@ const isCacheableResponse = (response) =>
 
 const cacheBuiltApplication = async () => {
   const cache = await caches.open(CACHE_NAME)
-  const indexUrl = new URL('./index.html', self.registration.scope)
+  const scope = self.registration.scope
+  const indexUrl = new URL('./index.html', scope)
   const indexResponse = await fetch(indexUrl, { cache: 'reload' })
 
   if (!isCacheableResponse(indexResponse)) {
@@ -17,10 +18,14 @@ const cacheBuiltApplication = async () => {
   const html = await indexResponse.clone().text()
   const assetUrls = Array.from(
     html.matchAll(/(?:src|href)="([^"]+)"/gu),
-    (match) => new URL(match[1], self.registration.scope),
-  ).filter((url) => url.origin === self.location.origin)
+    (match) => new URL(match[1], scope),
+  )
+    .filter((url) => url.origin === self.location.origin)
+    .map((url) => url.href)
+  const appShellUrls = APP_SHELL.map((path) => new URL(path, scope).href)
+  const uniqueUrls = [...new Set([...appShellUrls, ...assetUrls])]
 
-  await cache.addAll([...APP_SHELL, ...assetUrls])
+  await cache.addAll(uniqueUrls)
   await cache.put('./index.html', indexResponse.clone())
   await cache.put('./', indexResponse)
 }
